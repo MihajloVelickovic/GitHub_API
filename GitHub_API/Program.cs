@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 
@@ -15,7 +16,6 @@ namespace GitHub_API{
                 var path = Path.Combine(baseDir, ".env");
                 DotEnv.Inject(path);
             }
-            var ghToken = Environment.GetEnvironmentVariable("GH_TOKEN");
             
             /*
              * HttpListener na localhostu, zahtevi ce se parsirati
@@ -25,42 +25,60 @@ namespace GitHub_API{
             listener.Prefixes
                     .Add("http://localhost:1738/");
             listener.Start();
+            
+            while(true)
+                ThreadPool.QueueUserWorkItem(ServeRequest, listener.GetContext());
+
+
+        }
+
+        private static void ServeRequest(object? state){
+
+            if (state == null)
+                return;
+            
+            var context = (HttpListenerContext)state;
 
             try{
+
+                /* Izvlacenje vrednosti za owner i repo */
+                var vars = context.Request
+                    .Url?
+                    .Query
+                    .Remove(0, 1)
+                    .Split("&");
+
+                if (vars == null)
+                    throw new Exception("Null query exc");
+                if (vars.Length != 2)
+                    throw new Exception("Mora imati tacno dva parametra");
+
+                var owner = vars[0].Split("=");
+                var repo = vars[1].Split("=");
+
+                if (owner[0] != "owner")
+                    throw new Exception("Prvi argument mora biti owner");
+                if (repo[0] != "repo")
+                    throw new Exception("Drugi argument mora biti repo");
+
+                string apiUrl = $"https://api.github.com/repos/{owner[1]}/{repo[1]}/stats/contributors";
                 
-                while (true){
-                    /* Izvlacenje vrednosti za owner i repo */
-                    var context = listener.GetContext();
-                    var vars = context.Request
-                                              .Url?
-                                              .Query
-                                              .Remove(0, 1)
-                                              .Split("&");       
-                    
-                    if (vars == null)
-                        throw new Exception("Null query exc");
-                    if (vars.Length != 2)
-                        throw new Exception("Mora imati tacno dva parametra");
+                httpClient.DefaultRequestHeaders.Add("User-Agent", "GitHub_API");
+                var ghToken = Environment.GetEnvironmentVariable("GH_TOKEN");
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", ghToken);
+                var res = httpClient.GetAsync(apiUrl).Result;
+                
+                if (!res.IsSuccessStatusCode)
+                    throw new Exception($"ERROR: {res.StatusCode}");
 
-                    var owner = vars[0].Split("=");
-                    var repo = vars[1].Split("=");
+                var content = res.Content.ReadAsStringAsync().Result;
+                
+                Console.WriteLine($"{content}");
 
-                    if (owner[0] != "owner")
-                        throw new Exception("Prvi argument mora biti owner");
-                    if (repo[0] != "repo")
-                        throw new Exception("Drugi argument mora biti repo");
-                    
-                    string apiUrl = $"https://api.github.com/repos/{owner[1]}/{repo[1]}/stats/contributors";
-                    
-                }
             }
             catch (Exception e){
                 Console.WriteLine(e.Message);
             }
-            
-            // httpClient.DefaultRequestHeaders.Add("User-Agent", "GitHub_API");
-            // httpClient.DefaultRequestHeaders.Add("Authorization", $"{ghToken}");
-            
         }
     }
 }
