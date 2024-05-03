@@ -4,6 +4,9 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using Newtonsoft.Json;
+
+
+
 namespace GitHub_API{
     public class Program{
         
@@ -76,6 +79,7 @@ namespace GitHub_API{
                 
                 Console.WriteLine($"{a}");
 
+                //Kesirati vrednost
             }
             catch (Exception e){
                 Console.WriteLine(e.Message);
