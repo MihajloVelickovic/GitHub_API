@@ -64,8 +64,10 @@ namespace GitHub_API{
                 if (repo[0] != "repo")
                     throw new Exception("Drugi argument mora biti repo");
 
-                string apiUrl = $"https://api.github.com/repos/{owner[1]}/{repo[1]}/stats/contributors";
+                /* Treba pogledati jos */
+                string apiUrl = $"https://api.github.com/repos/{owner[1]}/{repo[1]}/contributors?anon=1";
                 
+                /* Podesavanje klijenta da salje korektan zahtev */
                 httpClient.DefaultRequestHeaders.Add("User-Agent", "GitHub_API");
                 var ghToken = Environment.GetEnvironmentVariable("GH_TOKEN");
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", ghToken);
@@ -75,9 +77,9 @@ namespace GitHub_API{
                     throw new Exception($"ERROR: {res.StatusCode}");
 
                 var content = res.Content.ReadAsStringAsync().Result;
-                var a = JsonConvert.SerializeObject(content);
+                var contentJson = JsonConvert.SerializeObject(content);
                 
-                Console.WriteLine($"{a}");
+                Console.WriteLine($"{contentJson}");
 
                 //Kesirati vrednost
             }
