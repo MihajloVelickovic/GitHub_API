@@ -37,10 +37,10 @@ namespace GitHub_API{
 
             try{
                 var vars = context.Request
-                    .Url?
-                    .Query
-                    .Remove(0, 1)
-                    .Split("&");
+                                         .Url?
+                                         .Query
+                                         .Remove(0, 1)
+                                         .Split("&");
 
                 if (vars == null)
                     throw new Exception("Null query exc");
