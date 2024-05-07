@@ -20,7 +20,7 @@ public class Program{
             
         HttpClient.DefaultRequestHeaders.Add("User-Agent", "GitHub_API");
         var ghToken = Environment.GetEnvironmentVariable("GH_TOKEN");
-        //HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", ghToken);
+        HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", ghToken);
             
         var listener = new HttpListener();
         listener.Prefixes
@@ -88,7 +88,7 @@ public class Program{
                 var content = res.Content.ReadAsStringAsync().Result;
                 contributors = JsonConvert.DeserializeObject<List<GitHubResult>>(content);
                 CacheEntree? cacheEntree = new(contributors!,DateTime.Now);
-
+                
                 if(contributors!.Count < CacheSettings.MaxEntryContributorCount)
                     Cache.WriteToCache(key, cacheEntree);
             }
