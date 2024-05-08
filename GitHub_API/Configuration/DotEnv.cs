@@ -10,7 +10,7 @@ public class DotEnv
 
         foreach (var line in File.ReadAllLines(path))
         {
-            string[] split = line.Split("=", StringSplitOptions.RemoveEmptyEntries);
+            var split = line.Split("=", StringSplitOptions.RemoveEmptyEntries);
             if (split.Length != 2)
                 continue;
 

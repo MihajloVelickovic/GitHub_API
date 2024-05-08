@@ -1,11 +1,10 @@
 using GitHub_API.Configuration;
-using GitHub_API.Models;
 
-namespace GitHub_API;
+namespace GitHub_API.Models;
 
 public static class Cache {
     private static readonly ReaderWriterLockSlim CacheLock = new();
-    private static readonly Dictionary<string,CacheEntry?> CacheDict = new();
+    private static readonly Dictionary<string, CacheEntry?> CacheDict = new();
 
     public static bool Contains(string key){
         CacheLock.EnterReadLock();
@@ -49,7 +48,7 @@ public static class Cache {
         }
         finally{
             CacheLock.ExitWriteLock();
-            if (CacheSettings.DoCacheTrim && Count() >= 0.8*CacheSettings.MaxEntries)
+            if (CacheSettings.DoCacheTrim && Count() >= 0.8 * CacheSettings.MaxEntries)
                 TrimCache();
         }
     }
@@ -57,15 +56,11 @@ public static class Cache {
     public static void PeriodicCleanup(){
         CacheLock.EnterWriteLock();
         try{
-            if (Count() >= CacheSettings.MaxEntries * 0.8m){
-                List<string> keysToRemove = new();
+            if (Count() >= CacheSettings.MaxEntries * 0.8m)
                 foreach (var kvPair in CacheDict)
                     if (DateTime.Now - kvPair.Value!.CachedTime >= CacheSettings.CleanupPeriod)
-                        keysToRemove.Add(kvPair.Key);
-
-                foreach (var key in keysToRemove)
-                    CacheDict.Remove(key);
-            }
+                        CacheDict.Remove(kvPair.Key);
+            
         }
         catch (Exception e){
             Console.Write(e.Message);
@@ -80,12 +75,11 @@ public static class Cache {
         CacheLock.EnterWriteLock();
         try{
             if (Count() >= CacheSettings.MaxEntries * 0.8m){
-                List<string> keys = CacheDict.Keys.ToList();
-                decimal countForRemoval = CacheSettings.MaxEntries * 0.4m;
-                Random rnd = new Random();
+                var keys = CacheDict.Keys.ToList();
+                var countForRemoval = CacheSettings.MaxEntries * 0.4m;
+                Random rnd = new();
 
-                for (int i = 0; i< countForRemoval; ++i)
-                {
+                for (int i = 0; i< countForRemoval; ++i){
                     int indexToRemove = rnd.Next(0, keys.Count);
                     CacheDict.Remove(keys[indexToRemove]);
                     keys.RemoveAt(indexToRemove);

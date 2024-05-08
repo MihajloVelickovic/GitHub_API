@@ -1,6 +1,4 @@
-using GitHub_API.Models;
-
-namespace GitHub_API;
+namespace GitHub_API.Models;
 
 public class GitHubResult{
     public int Total{ get; set; }

@@ -13,51 +13,45 @@ public static class CacheSettings
     public static bool DoCacheTrim {  get; private set; }
     public static bool AutoRestoreDefaultConfig { get; private set; }
 
-    private static string GetConfigurationFilePath()
-    {
-        return Path.Combine(DirExtension.ProjectBase()!,
-                                        "Configuration\\CacheConfiguration.json");
+    private static string GetConfigurationFilePath(){
+        return Path.Combine(DirExtension.ProjectBase()!, 
+                            Path.Combine("Configuration", 
+                                         "CacheConfiguration.json"));
     }
 
-    public static void LoadCacheSettings()
-    {
-        try
-        {
+    public static void LoadCacheSettings(){
+        try{
             var fullPath = GetConfigurationFilePath();
-            if (File.Exists(fullPath))
-            {
-                string json = File.ReadAllText(fullPath);
+            if (!File.Exists(fullPath)) return;
+            var json = File.ReadAllText(fullPath);
 
-                var settings = JsonConvert.DeserializeAnonymousType(json, new
-                {
-                    MaxEntries = default(ushort),
-                    CleanupPeriod = default(TimeSpan),
-                    MaxEntryContributorCount = default(ushort),
-                    CachingEnabled = default(bool),
-                    DoPeriodicCleanup = default(bool),
-                    DoCacheTrim = default(bool),
-                    AutoRestoreDefaultConfig = default(bool)
-                });
+            var settings = JsonConvert.DeserializeAnonymousType(json, new{
+                MaxEntries = default(ushort),
+                CleanupPeriod = default(TimeSpan),
+                MaxEntryContributorCount = default(ushort),
+                CachingEnabled = default(bool),
+                DoPeriodicCleanup = default(bool),
+                DoCacheTrim = default(bool),
+                AutoRestoreDefaultConfig = default(bool)
+            });
 
-                if (settings != null)
-                {
-                    MaxEntries = settings.MaxEntries;
-                    CleanupPeriod = settings.CleanupPeriod;
-                    MaxEntryContributorCount = settings.MaxEntryContributorCount;
-                    CachingEnabled = settings.CachingEnabled;
-                    DoPeriodicCleanup = CachingEnabled ? settings.DoPeriodicCleanup : false;
-                    DoCacheTrim =  CachingEnabled ? settings.DoCacheTrim : false;
-                    AutoRestoreDefaultConfig = settings.AutoRestoreDefaultConfig;
-                }
-            }
+            if (settings == null) 
+                return;
+            MaxEntries = settings.MaxEntries;
+            CleanupPeriod = settings.CleanupPeriod;
+            MaxEntryContributorCount = settings.MaxEntryContributorCount;
+            CachingEnabled = settings.CachingEnabled;
+            DoPeriodicCleanup = CachingEnabled && settings.DoPeriodicCleanup;
+            DoCacheTrim =  CachingEnabled && settings.DoCacheTrim;
+            AutoRestoreDefaultConfig = settings.AutoRestoreDefaultConfig;
 
         }
-        catch(JsonSerializationException jsEX){
-            Console.WriteLine($"Error loading cache settings: {jsEX.Message} | -> Restoring defaults");
+        catch(JsonSerializationException jsEx){
+            Console.WriteLine($"Error loading cache settings: {jsEx.Message} | -> Restoring defaults");
             RestoreDefaultsAndLoad();
         }
-        catch (OverflowException ofwEX){
-            Console.WriteLine($"Error loading cache settings: {ofwEX.Message} | -> Restoring defaults");
+        catch (OverflowException ofwEx){
+            Console.WriteLine($"Error loading cache settings: {ofwEx.Message} | -> Restoring defaults");
             RestoreDefaultsAndLoad();
         }
         catch (Exception ex)
@@ -87,8 +81,7 @@ public static class CacheSettings
             DoPeriodicCleanup = true;
             AutoRestoreDefaultConfig = true;
 
-            string json = JsonConvert.SerializeObject(new
-            {
+            string json = JsonConvert.SerializeObject(new{
                 MaxEntries,
                 CleanupPeriod,
                 MaxEntryContributorCount,
