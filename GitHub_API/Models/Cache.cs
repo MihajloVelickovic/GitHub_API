@@ -54,31 +54,29 @@ public static class Cache {
     
     public static void PeriodicCleanup(){
         CacheLock.EnterWriteLock();
-        try
-        {
-            List<string> keysToRemove = new();
-            foreach(var kvPair in CacheDict)
-                if (DateTime.Now - kvPair.Value!.CachedTime >= CacheSettings.CleanupPeriod)
-                    keysToRemove.Add(kvPair.Key);
-            
-            foreach(var key in keysToRemove)
-                CacheDict.Remove(key);
+        try{
+            if (Count() >= CacheSettings.MaxEntries * 0.8m){
+                List<string> keysToRemove = new();
+                foreach (var kvPair in CacheDict)
+                    if (DateTime.Now - kvPair.Value!.CachedTime >= CacheSettings.CleanupPeriod)
+                        keysToRemove.Add(kvPair.Key);
+
+                foreach (var key in keysToRemove)
+                    CacheDict.Remove(key);
+            }
         }
-        catch (Exception e)
-        {
+        catch (Exception e){
             Console.Write(e.Message);
             throw;
         }
-        finally
-        {
+        finally{
             CacheLock.ExitWriteLock();
         }
     }
 
     public static void CacheCleanup(){
         CacheLock.EnterWriteLock();
-        try
-        {
+        try{
             List<string> keys = CacheDict.Keys.ToList();
             decimal countForRemoval = CacheSettings.MaxEntries * 0.4m;
             Random rnd = new Random();
@@ -89,13 +87,11 @@ public static class Cache {
                 keys.RemoveAt(indexToRemove);
             }
         }
-        catch (Exception e)
-        {
+        catch (Exception e){
             Console.Write(e.Message);
             throw;
         }
-        finally
-        {
+        finally{
             CacheLock.ExitWriteLock();
         }
     }
