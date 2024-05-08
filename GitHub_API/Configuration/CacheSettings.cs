@@ -3,8 +3,7 @@ using Newtonsoft.Json;
 
 namespace GitHub_API.Configuration;
 
-public static class CacheSettings
-{
+public static class CacheSettings{
     public static ushort MaxEntries { get; private set; }
     public static TimeSpan CleanupPeriod { get; private set; }
     public static ushort MaxEntryContributorCount { get; private set; }

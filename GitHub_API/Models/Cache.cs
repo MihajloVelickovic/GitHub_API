@@ -2,7 +2,7 @@ using GitHub_API.Configuration;
 
 namespace GitHub_API.Models;
 
-public static class Cache {
+public static class Cache{
     private static readonly ReaderWriterLockSlim CacheLock = new();
     private static readonly Dictionary<string, CacheEntry?> CacheDict = new();
 
@@ -13,13 +13,15 @@ public static class Cache {
         return test;
     }
     
-    public static CacheEntry ReadFromCache(string key){
+    public static CacheEntry ReadFromCache(ref string key){
         CacheLock.EnterReadLock();
         try{
-            if (CacheDict.TryGetValue(key, out CacheEntry? value))
+            if (CacheDict.TryGetValue(key, out CacheEntry? value)){
+                key += " (Result pulled from cache)";
                 return value!;
+            }
             else
-                throw new KeyNotFoundException($"Kljuc ({key}) nije pronadjen");
+                throw new KeyNotFoundException($"Key ({key}) not found");
         }
         catch (Exception e){
             Console.Write(e.Message);

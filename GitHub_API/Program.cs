@@ -65,22 +65,22 @@ public class Program{
                               .Split("&");
 
             if (vars == null)
-                throw new Exception("Null query exc");
+                throw new Exception("Null query exception");
             if (vars.Length != 2)
-                throw new Exception("Mora imati tacno dva parametra");
+                throw new Exception("Must have exactly 2 query parameters: \"owner\" & \"repo\"");
 
             var owner = vars[0].Split("=");
             var repo = vars[1].Split("=");
 
             if (owner[0] != "owner")
-                throw new Exception("Prvi argument mora biti owner");
+                throw new Exception("First query parameter must be the \"owner\"");
             if (repo[0] != "repo")
-                throw new Exception("Drugi argument mora biti repo");
+                throw new Exception("Second query parameter must be the \"repo\"");
 
             var key = $"{owner[1]}/{repo[1]}";
             
             var contributors = CacheSettings.CachingEnabled 
-                             ? FetchContributorsWithCaching(key)
+                             ? FetchContributorsWithCaching(ref key)
                              : FetchContributorsWithoutCaching(key);
 
                 
@@ -105,9 +105,9 @@ public class Program{
         }
     }
 
-    private static List<GitHubResult>? FetchContributorsWithCaching(string key){
+    private static List<GitHubResult>? FetchContributorsWithCaching(ref string key){
         var contributors = Cache.Contains(key)
-                         ? Cache.ReadFromCache(key).GitHubResult
+                         ? Cache.ReadFromCache(ref key).GitHubResult
                          : FetchContributorsWithoutCaching(key);
         
         return contributors;
