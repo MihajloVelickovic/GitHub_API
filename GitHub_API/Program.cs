@@ -1,11 +1,4 @@
-﻿using System.Diagnostics;
-using System.Net;
-using System.Net.Http.Headers;
-using System.Text;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
-namespace GitHub_API;
+﻿namespace GitHub_API;
 public class Program{
 
     public static readonly HttpClient HttpClient = new();
