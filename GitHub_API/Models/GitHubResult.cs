@@ -1,3 +1,5 @@
+using GitHub_API.Models;
+
 namespace GitHub_API;
 
 public class GitHubResult{

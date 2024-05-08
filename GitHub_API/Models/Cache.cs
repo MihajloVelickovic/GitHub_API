@@ -1,3 +1,6 @@
+using GitHub_API.Configuration;
+using GitHub_API.Models;
+
 namespace GitHub_API;
 
 public static class Cache {
@@ -14,7 +17,7 @@ public static class Cache {
     public static CacheEntry ReadFromCache(string key){
         CacheLock.EnterReadLock();
         try{
-            if (CacheDict.TryGetValue(key, out CacheEntry value))
+            if (CacheDict.TryGetValue(key, out CacheEntry? value))
                 return value!;
             else
                 throw new KeyNotFoundException($"Kljuc ({key}) nije pronadjen");
@@ -30,7 +33,7 @@ public static class Cache {
 
     public static int Count(){
         CacheLock.EnterWriteLock();
-        var count = CacheDict.Count();
+        var count = CacheDict.Count;
         CacheLock.ExitWriteLock();
         return count;
     }
@@ -46,9 +49,8 @@ public static class Cache {
         }
         finally{
             CacheLock.ExitWriteLock();
-
-            if (Count() > CacheSettings.MaxEntries * 0.8)
-                CacheCleanup();
+            if (CacheSettings.DoCacheTrim && Count() >= 0.8*CacheSettings.MaxEntries)
+                TrimCache();
         }
     }
     
@@ -74,17 +76,20 @@ public static class Cache {
         }
     }
 
-    public static void CacheCleanup(){
+    public static void TrimCache(){
         CacheLock.EnterWriteLock();
         try{
-            List<string> keys = CacheDict.Keys.ToList();
-            decimal countForRemoval = CacheSettings.MaxEntries * 0.4m;
-            Random rnd = new Random();
+            if (Count() >= CacheSettings.MaxEntries * 0.8m){
+                List<string> keys = CacheDict.Keys.ToList();
+                decimal countForRemoval = CacheSettings.MaxEntries * 0.4m;
+                Random rnd = new Random();
 
-            for(int i=0; i< countForRemoval;++i){
-                int indexToRemove = rnd.Next(0, keys.Count);
-                CacheDict.Remove(keys[indexToRemove]);
-                keys.RemoveAt(indexToRemove);
+                for (int i = 0; i< countForRemoval; ++i)
+                {
+                    int indexToRemove = rnd.Next(0, keys.Count);
+                    CacheDict.Remove(keys[indexToRemove]);
+                    keys.RemoveAt(indexToRemove);
+                }
             }
         }
         catch (Exception e){

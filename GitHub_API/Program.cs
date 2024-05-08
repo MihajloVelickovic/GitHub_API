@@ -1,9 +1,9 @@
 ﻿using System.Diagnostics;
 using System.Net;
-using System.Net.Http.Headers;
-using System.Text;
+using GitHub_API.Configuration;
+using GitHub_API.Extensions;
+using GitHub_API.Models;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace GitHub_API;
 public class Program{
@@ -12,6 +12,8 @@ public class Program{
     public static DateTime PreviousCleanupTime = DateTime.Now;
 
     public static void Main(string[] args){
+        CacheSettings.LoadCacheSettings();
+        
         var baseDir = DirExtension.ProjectBase();
         if (baseDir != null){
             var path = Path.Combine(baseDir, ".env");
@@ -34,13 +36,14 @@ public class Program{
                 PreviousCleanupTime = DateTime.Now;
                 ThreadPool.QueueUserWorkItem(CleanupCache, "Periodic cleanup");
             }
+
             ThreadPool.QueueUserWorkItem(ServeRequest, listener.GetContext());
         }
     }
 
     private static bool RequiresPeriodicCleanup(){
-        return (DateTime.Now - PreviousCleanupTime) >= CacheSettings.CleanupPeriod
-                && Cache.Count() > 0;
+        return CacheSettings.DoPeriodicCleanup && Cache.Count() > 0 
+            &&(DateTime.Now - PreviousCleanupTime) >= CacheSettings.CleanupPeriod;
     }
 
     private static void ServeRequest(object? state){
@@ -72,27 +75,17 @@ public class Program{
             if (repo[0] != "repo")
                 throw new Exception("Drugi argument mora biti repo");
 
-            List<GitHubResult>? contributors;
+            List<GitHubResult>? contributors = CacheSettings.CachingEnabled
+                                             ? FetchContributorsWithCaching(ref owner[1], ref repo[1])
+                                             : FetchContributorsWithoutCaching(ref owner[1], ref repo[1]);
 
             var key = $"{owner[1]}/{repo[1]}";
                 
-            if (CacheSettings.CachingEnabled && Cache.Contains(key))
-                contributors = Cache.ReadFromCache(key).GitHubResult;
-                
-            else{
-                var apiUrl = $"https://api.github.com/repos/{owner[1]}/{repo[1]}/stats/contributors";
-                var res = HttpClient.GetAsync(apiUrl).Result;
-                if (!res.IsSuccessStatusCode)
-                    throw new Exception($"ERROR: {res.StatusCode}");
-                    
-                var content = res.Content.ReadAsStringAsync().Result;
-                contributors = JsonConvert.DeserializeObject<List<GitHubResult>>(content);
-                CacheEntry? cacheEntree = new(contributors!,DateTime.Now);
-                
-                if(contributors!.Count < CacheSettings.MaxEntryContributorCount)
-                    Cache.WriteToCache(key, cacheEntree);
+            if (contributors!.Count < CacheSettings.MaxEntryContributorCount){
+                CacheEntry cacheEntry = new(contributors!, DateTime.Now);
+                Cache.WriteToCache(key, cacheEntry);
             }
-
+                
             sw1.Stop();
                 
             Console.WriteLine(key);
@@ -108,8 +101,34 @@ public class Program{
             Console.WriteLine(e.Message);
         }
     }
+
+    private static List<GitHubResult>? FetchContributorsWithCaching(ref string owner, ref string repo){
+        List<GitHubResult>? contributors;
+        var key = $"{owner}/{repo}";
+        if (Cache.Contains(key))
+            contributors = Cache.ReadFromCache(key).GitHubResult;
+
+        else
+            contributors = FetchContributorsWithoutCaching(ref owner, ref repo);
+
+            return contributors;
+    }
+
+    private static List<GitHubResult>? FetchContributorsWithoutCaching(ref string owner, ref string repo)
+    {
+        List<GitHubResult>? contributors;
+        var apiUrl = $"https://api.github.com/repos/{owner}/{repo}/stats/contributors";
+        var res = HttpClient.GetAsync(apiUrl).Result;
+        if (!res.IsSuccessStatusCode)
+            throw new Exception($"ERROR: {res.StatusCode}");
+
+        var content = res.Content.ReadAsStringAsync().Result;
+        contributors = JsonConvert.DeserializeObject<List<GitHubResult>>(content);       
+
+        return contributors;
+    }
+
     private static void CleanupCache(object? state){
         Cache.PeriodicCleanup();
     }
 }
-

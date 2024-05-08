@@ -1,0 +1,9 @@
+{
+  "MaxEntries": 1000,
+  "CleanupPeriod": "00:30:00",
+  "MaxEntryContributorCount": 1000,
+  "CachingEnabled": true,
+  "DoPeriodicCleanup": true,
+  "DoCacheTrim": false,
+  "AutoRestoreDefaultConfig": true
+}
