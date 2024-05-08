@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Net;
+using System.Net.Http.Headers;
 using GitHub_API.Configuration;
 using GitHub_API.Extensions;
 using GitHub_API.Models;
@@ -22,7 +23,7 @@ public class Program{
             
         HttpClient.DefaultRequestHeaders.Add("User-Agent", "GitHub_API");
         var ghToken = Environment.GetEnvironmentVariable("GH_TOKEN");
-        //HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", ghToken);
+        HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", ghToken);
             
         var listener = new HttpListener();
         listener.Prefixes
