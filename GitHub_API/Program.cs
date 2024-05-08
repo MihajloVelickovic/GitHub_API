@@ -1,4 +1,11 @@
-﻿namespace GitHub_API;
+﻿using System.Diagnostics;
+using System.Net;
+using System.Net.Http.Headers;
+using System.Text;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
+namespace GitHub_API;
 public class Program{
 
     public static readonly HttpClient HttpClient = new();
@@ -80,7 +87,7 @@ public class Program{
                     
                 var content = res.Content.ReadAsStringAsync().Result;
                 contributors = JsonConvert.DeserializeObject<List<GitHubResult>>(content);
-                CacheEntree? cacheEntree = new(contributors!,DateTime.Now);
+                CacheEntry? cacheEntree = new(contributors!,DateTime.Now);
                 
                 if(contributors!.Count < CacheSettings.MaxEntryContributorCount)
                     Cache.WriteToCache(key, cacheEntree);

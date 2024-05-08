@@ -1,10 +1,8 @@
-using Newtonsoft.Json.Linq;
-
 namespace GitHub_API;
 
 public static class Cache {
     private static readonly ReaderWriterLockSlim CacheLock = new();
-    private static readonly Dictionary<string,CacheEntree?> CacheDict = new();
+    private static readonly Dictionary<string,CacheEntry?> CacheDict = new();
 
     public static bool Contains(string key){
         CacheLock.EnterReadLock();
@@ -13,10 +11,10 @@ public static class Cache {
         return test;
     }
     
-    public static CacheEntree ReadFromCache(string key){
+    public static CacheEntry ReadFromCache(string key){
         CacheLock.EnterReadLock();
         try{
-            if (CacheDict.TryGetValue(key, out CacheEntree value))
+            if (CacheDict.TryGetValue(key, out CacheEntry value))
                 return value!;
             else
                 throw new KeyNotFoundException($"Kljuc ({key}) nije pronadjen");
@@ -37,7 +35,7 @@ public static class Cache {
         return count;
     }
 
-    public static void WriteToCache(string key, CacheEntree value){
+    public static void WriteToCache(string key, CacheEntry value){
         CacheLock.EnterWriteLock();
         try{
             CacheDict[key] = value;
