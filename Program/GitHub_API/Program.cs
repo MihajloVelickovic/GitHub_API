@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Headers;
+using System.Text;
 using GitHub_API.Configuration;
 using GitHub_API.Extensions;
 using GitHub_API.Models;
@@ -54,7 +55,7 @@ public class Program{
             return;
 
         var context = (HttpListenerContext)state;
-
+        var response = context.Response;
         try{
             Stopwatch stopwatch = new();
             stopwatch.Start();
@@ -99,6 +100,18 @@ public class Program{
             }
             Console.WriteLine($"Total commits: {totalCommits}");
             Console.WriteLine($"Time taken: {stopwatch.Elapsed.TotalMilliseconds}ms\n");
+            
+            var responseObject = new{
+                Key = key,
+                Contributors = contributors,
+                TotalCommits = totalCommits,
+                TotalTime = stopwatch.Elapsed.TotalMilliseconds
+            };
+            var responseJson = JsonConvert.SerializeObject(responseObject);
+            var responseByteArray = Encoding.UTF8.GetBytes(responseJson);
+            response.ContentLength64 = responseByteArray.Length;
+            response.ContentType = "text/json";
+            response.OutputStream.Write(responseByteArray, 0, responseByteArray.Length);
         }
         catch (Exception e){
             Console.WriteLine(e.Message);
