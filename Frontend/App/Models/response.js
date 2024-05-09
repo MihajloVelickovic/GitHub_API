@@ -18,7 +18,8 @@ export class Response{
         const keyDiv = document.createElement("div");
         
         const keylab = document.createElement("label");  
-        keylab.innerHTML = `${this.Key}`;
+        const keySplit = this.Key.split("/");
+        keylab.innerHTML = `<a href=https://www.github.com/${keySplit[0]}/${keySplit[1]}><b>${keySplit[0]}</b>/<i>${keySplit[1]}</i></a>`;
         keylab.classList.add("margin-10");
         
         keyDiv.appendChild(keylab);
@@ -31,7 +32,7 @@ export class Response{
             
             const contribAuthor = document.createElement("label");
             contribAuthor.classList.add("margin-10")
-            contribAuthor.innerHTML = cont.Author.Login + ": ";
+            contribAuthor.innerHTML = `<a href=https://www.github.com/${cont.Author.Login}>${cont.Author.Login}: `;
             
             const contribCommits = document.createElement("label");
             contribCommits.classList.add("margin-10")
