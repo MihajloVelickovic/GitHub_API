@@ -1,12 +1,15 @@
 import {Response} from "./Models/response.js"
 
-const ownerBox = document.querySelector(".owner");
-const repoBox = document.querySelector(".repo");
+let scheme = localStorage.getItem("scheme");
 
-const scheme = window.matchMedia("(prefers-color-scheme: dark)").matches;
+if(!scheme)
+    scheme = window.matchMedia("(prefers-color-scheme: dark)").matches;
+else
+    scheme = (scheme === "true");
 
 if(scheme)
     document.body.classList.toggle("dark");
+
 else
     document.body.classList.toggle("light");
 
@@ -15,12 +18,14 @@ toggle.onclick = () => {
     if(scheme){
         document.body.classList.toggle("dark");
         document.body.classList.toggle("light");
+        localStorage.setItem("scheme", "false");
     }
     else{
         document.body.classList.toggle("light");
         document.body.classList.toggle("dark");
+        localStorage.setItem("scheme", "true");
     }
-    
+
 }
 
 const clear = document.querySelector(".clear-button");
@@ -28,6 +33,9 @@ clear.onclick = () => {
     const responses = document.querySelector(".responses");
     responses.replaceChildren();
 }
+
+const ownerBox = document.querySelector(".owner");
+const repoBox = document.querySelector(".repo");
 
 const button = document.querySelector(".submit");
 button.onclick = async () => {
@@ -45,6 +53,5 @@ button.onclick = async () => {
                         response = new Response(data.Key, data.Contributors, data.TotalCommits, data.TotalTime);
                         response.drawResponse(document.querySelector(".responses"));
                     });
-          
 
 }
