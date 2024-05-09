@@ -17,7 +17,7 @@ public static class Cache{
         CacheLock.EnterReadLock();
         try{
             if (CacheDict.TryGetValue(key, out CacheEntry? value)){
-                key += " (Result pulled from cache)";
+                key += " [C]";
                 return value!;
             }
             else
