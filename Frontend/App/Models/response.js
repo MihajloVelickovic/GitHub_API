@@ -32,7 +32,7 @@ export class Response{
             
             const contribAuthor = document.createElement("label");
             contribAuthor.classList.add("margin-10")
-            contribAuthor.innerHTML = `<a href=https://www.github.com/${cont.Author.Login}>${cont.Author.Login}: `;
+            contribAuthor.innerHTML = `<a href=https://www.github.com/${cont.Author.Login} target="_blank">${cont.Author.Login}: `;
             
             const contribCommits = document.createElement("label");
             contribCommits.classList.add("margin-10")
