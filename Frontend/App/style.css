@@ -1,42 +1,43 @@
 body{
     font-family: 'JetBrains Mono';
-    font-size: 32pt;
     display: flex;
+    flex-direction: column;
+    transition: background-color 0.1s ease;
 }
 
-@media(prefers-color-scheme: dark){
-    body{
-        background-color: #212121;
-        color:#f2f2f2;
-    }
+.dark{
+    background-color: #212121;
+    color: #f2f2f2;    
 }
 
-@media(prefers-color-scheme: light){
-    body{
-        background-color: #f2f2f2;
-        color:#212121;
-    }
-    
+.light{
+    background-color: #f2f2f2;
+    color: #212121;
 }
 
 .margin-10 {
     margin: 10px;
 }
 
+.margin-5{
+    margin: 5px;
+}
+
 .input-box{
-    height: 32pt;
+    height: 16pt;
     font-family: 'JetBrains Mono';
-    font-size: 20pt;
+    font-size: 10pt;
     border: 0px;
     border-radius: 15px;
     padding: 10px;
 }
 
 .form-div {
+    font-size: 16pt;
     display: flex;
     flex-direction: column;
     gap: 20px;
-    width: 1000px;
+    width: 600px;
     margin: 50px auto;
     padding: 20px;
     border: 1px solid #ccc;
@@ -44,17 +45,59 @@ body{
 }
 
 .submit {
-    padding: 10px 20px;
     background-color: #5bff69;
+}
+
+.theme-button {
+    background-color: #30f1ff;
+}
+
+.clear-button {
+    background-color: #ff3030;
+}
+
+.button{
+    padding: 10px 20px;
+    background-color: #ff3030;
     color: #000000;
     border: none;
     border-radius: 5px;
-    font-size: 32pt;
+    font-size: 16pt;
     font-family: "JetBrains Mono";
     cursor: pointer;
 }
 
-.form-gr{
+.form-gr-main{
     display: grid;
     grid-template-columns: 1fr 4fr;
+}
+
+.form-gr{
+    display: grid;
+    grid-template-columns: 2fr 3fr;
+}
+
+.form-gr-buttons{
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+
+}
+
+.response{
+    display: grid;
+    gap: 20px;
+    width: 400px;
+    margin: 10px auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 12pt; 
+    text-align: center;
+}
+
+
+.responses{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
 }
