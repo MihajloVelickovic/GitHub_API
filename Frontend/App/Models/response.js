@@ -19,7 +19,7 @@ export class Response{
         
         const keylab = document.createElement("label");  
         const keySplit = this.Key.split("/");
-        keylab.innerHTML = `<a href=https://www.github.com/${keySplit[0]}/${keySplit[1]}><b>${keySplit[0]}</b>/<i>${keySplit[1]}</i></a>`;
+        keylab.innerHTML = `<a href=https://www.github.com/${keySplit[0]}/${keySplit[1]} target="_blank"><b>${keySplit[0]}</b>/<i>${keySplit[1]}</i></a>`;
         keylab.classList.add("margin-10");
         
         keyDiv.appendChild(keylab);
