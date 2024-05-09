@@ -95,7 +95,8 @@ public class Program{
             Console.WriteLine(key);
             var totalCommits = 0;
             foreach (var contributor in contributors){
-                Console.WriteLine($"{contributor.Author!.Login}: {contributor.Total} commits");
+                Console.WriteLine($"{contributor.Author!.Login}: {contributor.Total}" + 
+                                  (contributor.Total > 1 ? " commits" : " commit"));
                 totalCommits += contributor.Total;
             }
             Console.WriteLine($"Total commits: {totalCommits}");

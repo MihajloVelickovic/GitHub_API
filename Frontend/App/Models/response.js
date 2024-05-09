@@ -36,7 +36,7 @@ export class Response{
             
             const contribCommits = document.createElement("label");
             contribCommits.classList.add("margin-10")
-            contribCommits.innerHTML = cont.Total + " commits"; 
+            contribCommits.innerHTML = cont.Total + (cont.Total > 1 ? " commits" : " commit"); 
             
             contdiv.appendChild(contribAuthor);
             contdiv.appendChild(contribCommits);
