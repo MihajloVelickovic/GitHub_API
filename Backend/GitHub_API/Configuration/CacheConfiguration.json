@@ -4,6 +4,8 @@
   "MaxEntryContributorCount": 1000,
   "CachingEnabled": true,
   "DoPeriodicCleanup": true,
-  "DoCacheTrim": false,
+  "DoCacheTrim": true,
+  "PreTrimPct": 0.8,
+  "PostTrimPct": 0.4,
   "AutoRestoreDefaultConfig": true
 }

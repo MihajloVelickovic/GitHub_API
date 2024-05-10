@@ -18,6 +18,7 @@ public static class Cache{
         try{
             if (CacheDict.TryGetValue(key, out CacheEntry? value)){
                 key += " [C]";
+                value!.CachedTime = DateTime.Now;
                 return value!;
             }
             else
@@ -32,13 +33,6 @@ public static class Cache{
         }
     }
 
-    public static int Count(){
-        CacheLock.EnterWriteLock();
-        var count = CacheDict.Count;
-        CacheLock.ExitWriteLock();
-        return count;
-    }
-
     public static void WriteToCache(string key, CacheEntry value){
         CacheLock.EnterWriteLock();
         try{
@@ -50,7 +44,7 @@ public static class Cache{
         }
         finally{
             CacheLock.ExitWriteLock();
-            if (CacheSettings.DoCacheTrim && Count() >= 0.8 * CacheSettings.MaxEntries)
+            if (CheckCacheTrim())
                 TrimCache();
         }
     }
@@ -58,11 +52,10 @@ public static class Cache{
     public static void PeriodicCleanup(){
         CacheLock.EnterWriteLock();
         try{
-            if (Count() >= CacheSettings.MaxEntries * 0.8m)
+            if (Count() >= CacheSettings.MaxEntries * CacheSettings.PreTrimPct)
                 foreach (var kvPair in CacheDict)
                     if (DateTime.Now - kvPair.Value!.CachedTime >= CacheSettings.CleanupPeriod)
-                        CacheDict.Remove(kvPair.Key);
-            
+                        CacheDict.Remove(kvPair.Key);            
         }
         catch (Exception e){
             Console.Write(e.Message);
@@ -76,16 +69,13 @@ public static class Cache{
     public static void TrimCache(){
         CacheLock.EnterWriteLock();
         try{
-            if (Count() >= CacheSettings.MaxEntries * 0.8m){
-                var keys = CacheDict.Keys.ToList();
-                var countForRemoval = CacheSettings.MaxEntries * 0.4m;
-                Random rnd = new();
+            if (Count() >= CacheSettings.MaxEntries * CacheSettings.PreTrimPct){
+                var forDeletion = CacheDict.ToList();
+                var countForRemoval = CacheSettings.MaxEntries * CacheSettings.PostTrimPct;
+                forDeletion.Sort((pair1, pair2) => pair1.Value!.CompareTo(pair2.Value));
 
-                for (int i = 0; i< countForRemoval; ++i){
-                    int indexToRemove = rnd.Next(0, keys.Count);
-                    CacheDict.Remove(keys[indexToRemove]);
-                    keys.RemoveAt(indexToRemove);
-                }
+                for(int i=0; i<countForRemoval; ++i)
+                    CacheDict.Remove(forDeletion[i].Key);
             }
         }
         catch (Exception e){
@@ -95,5 +85,17 @@ public static class Cache{
         finally{
             CacheLock.ExitWriteLock();
         }
+    }
+
+    public static int Count(){
+        CacheLock.EnterWriteLock();
+        var count = CacheDict.Count;
+        CacheLock.ExitWriteLock();
+        return count;
+    }
+
+    private static bool CheckCacheTrim(){
+        return CacheSettings.DoCacheTrim &&
+                Count() >= CacheSettings.PreTrimPct * CacheSettings.MaxEntries;
     }
 }
