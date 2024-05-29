@@ -17,6 +17,7 @@ public static class Cache{
         CacheLock.EnterReadLock();
         try{
             if (CacheDict.TryGetValue(key, out CacheEntry? value)){
+                value!.FromCache = true;
                 value!.CachedTime = DateTime.Now;
                 return value!;
             }
@@ -53,7 +54,7 @@ public static class Cache{
         try{
             if (Count() >= CacheSettings.MaxEntries * CacheSettings.PreTrimPct)
                 foreach (var kvPair in CacheDict)
-                    if (DateTime.Now - kvPair.Value!.CachedTime >= CacheSettings.CleanupPeriod)
+                   if (DateTime.Now - kvPair.Value!.CachedTime >= CacheSettings.CleanupPeriod)
                         CacheDict.Remove(kvPair.Key);            
         }
         catch (Exception e){
@@ -87,9 +88,7 @@ public static class Cache{
     }
 
     public static int Count(){
-        CacheLock.EnterWriteLock();
         var count = CacheDict.Count;
-        CacheLock.ExitWriteLock();
         return count;
     }
 

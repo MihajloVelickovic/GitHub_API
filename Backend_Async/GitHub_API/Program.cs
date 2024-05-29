@@ -35,12 +35,25 @@ public class Program{
 
         Console.WriteLine("Waiting for requests ....");
 
+        var cleanupThread = new Thread(PeriodicCleanup);
+        cleanupThread.Start();
+        
         while (true){
             var context = await listener.GetContextAsync();
             await Task.Run(() => ServeRequest(context));
         }
     }
 
+    public static void PeriodicCleanup(){
+        while (true){
+            if (RequiresPeriodicCleanup()){
+                Console.WriteLine("Performed periodic cache cleanup...");
+                CleanupCache();
+                PreviousCleanupTime = DateTime.Now;
+            }
+        }
+    }
+    
     private static bool RequiresPeriodicCleanup(){
         return CacheSettings.DoPeriodicCleanup && 
                Cache.Count() > 0 && 
@@ -78,12 +91,17 @@ public class Program{
 
             var key = $"{owner[1]}/{repo[1]}";
             
-            var contributors = CacheSettings.CachingEnabled 
-                             ? await FetchContributorsWithCaching(key)
-                             : await FetchContributorsWithoutCaching(key);
+            var result = CacheSettings.CachingEnabled 
+                         ? await FetchContributorsWithCaching(key)
+                         : await FetchContributorsWithoutCaching(key);
             
             stopwatch.Stop();
                 
+            if (result.FromCache)
+                key += " [C]";
+
+            var contributors = result.GitHubResult;
+            
             Console.WriteLine(key);
             var totalCommits = 0;
             foreach (var contributor in contributors!){
@@ -111,32 +129,32 @@ public class Program{
         }
     }
 
-    private static async Task<List<GitHubResult>?> FetchContributorsWithCaching(string key){
-        var contributors = Cache.Contains(key)
-                         ? Cache.ReadFromCache(key).GitHubResult
-                         : await FetchContributorsWithoutCaching(key);
+    private static async Task<CacheEntry> FetchContributorsWithCaching(string key){
+        var result = Cache.Contains(key)
+                     ? Cache.ReadFromCache(key)
+                     : await FetchContributorsWithoutCaching(key);
         
-        return contributors;
+        return result;
     }
-
-    private static async Task<List<GitHubResult>?> FetchContributorsWithoutCaching(string key){
+    
+    private static async Task<CacheEntry> FetchContributorsWithoutCaching(string key){
         var apiUrl = $"https://api.github.com/repos/{key}/stats/contributors";
         var res = await HttpClient.GetAsync(apiUrl);
         if (!res.IsSuccessStatusCode)
-            throw new Exception($"ERROR: {res.StatusCode}");
+            throw new Exception($"API ERROR: {res.StatusCode}");
 
         var content = await res.Content.ReadAsStringAsync();
         var contributors = JsonConvert.DeserializeObject<List<GitHubResult>>(content);       
 
-        if (contributors!.Count < CacheSettings.MaxEntryContributorCount){
+        if (CacheSettings.CachingEnabled && contributors!.Count < CacheSettings.MaxEntryContributorCount){
             CacheEntry cacheEntry = new(contributors!, DateTime.Now);
             Cache.WriteToCache(key, cacheEntry);
+            return cacheEntry;
         }
-        
-        return contributors;
+        return new CacheEntry(contributors!);
     }
 
-    private static void CleanupCache(object? state){
+    private static void CleanupCache(){
         Cache.PeriodicCleanup();
     }
 }
