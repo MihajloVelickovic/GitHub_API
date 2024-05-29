@@ -131,8 +131,8 @@ public class Program{
 
     private static async Task<CacheEntry> FetchContributorsWithCaching(string key){
         var result = Cache.Contains(key)
-                     ? Cache.ReadFromCache(key)
-                     : await FetchContributorsWithoutCaching(key);
+                   ? Cache.ReadFromCache(key)
+                   : await FetchContributorsWithoutCaching(key);
         
         return result;
     }
