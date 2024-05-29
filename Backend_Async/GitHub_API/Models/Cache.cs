@@ -13,11 +13,10 @@ public static class Cache{
         return test;
     }
     
-    public static CacheEntry ReadFromCache(ref string key){
+    public static CacheEntry ReadFromCache(string key){
         CacheLock.EnterReadLock();
         try{
             if (CacheDict.TryGetValue(key, out CacheEntry? value)){
-                key += " [C]";
                 value!.CachedTime = DateTime.Now;
                 return value!;
             }
