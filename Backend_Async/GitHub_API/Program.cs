@@ -31,13 +31,22 @@ public class Program{
         var listener = new HttpListener();
         listener.Prefixes
                 .Add("http://localhost:1738/");
-        listener.Start();
+
+        try{
+            listener.Start();
+        }
+        catch(Exception e){
+            Console.Write($"Error starting listener: {e.Message}");
+        }
+       
 
         Console.WriteLine("Waiting for requests ....");
 
-        var cleanupThread = new Thread(PeriodicCleanup);
-        cleanupThread.Start();
-        
+        if (CacheSettings.DoPeriodicCleanup){
+            var cleanupThread = new Thread(PeriodicCleanup);
+            cleanupThread.Start();
+        }
+       
         while (true){
             var context = await listener.GetContextAsync();
             await Task.Run(() => ServeRequest(context));
@@ -55,8 +64,7 @@ public class Program{
     }
     
     private static bool RequiresPeriodicCleanup(){
-        return CacheSettings.DoPeriodicCleanup && 
-               Cache.Count() > 0 && 
+        return Cache.Count() > 0 && 
                DateTime.Now - PreviousCleanupTime >= CacheSettings.CleanupPeriod;
     }
 
@@ -123,6 +131,9 @@ public class Program{
             response.ContentLength64 = responseByteArray.Length;
             response.ContentType = "text/json";
             await response.OutputStream.WriteAsync(responseByteArray);
+        }
+        catch(JsonException){
+            Console.WriteLine("API error: Returned empty json");
         }
         catch (Exception e){
             Console.WriteLine(e.Message);
