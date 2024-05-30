@@ -52,10 +52,9 @@ public static class Cache{
     public static void PeriodicCleanup(){
         CacheLock.EnterWriteLock();
         try{
-            if (Count() >= CacheSettings.MaxEntries * CacheSettings.PreTrimPct)
-                foreach (var kvPair in CacheDict)
-                   if (DateTime.Now - kvPair.Value!.CachedTime >= CacheSettings.CleanupPeriod)
-                        CacheDict.Remove(kvPair.Key);            
+            foreach (var kvPair in CacheDict)
+                if (DateTime.Now - kvPair.Value!.CachedTime >= CacheSettings.CleanupPeriod)
+                    CacheDict.Remove(kvPair.Key);            
         }
         catch (Exception e){
             Console.Write(e.Message);

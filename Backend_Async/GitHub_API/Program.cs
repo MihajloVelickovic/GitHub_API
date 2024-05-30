@@ -162,7 +162,7 @@ public class Program{
             Cache.WriteToCache(key, cacheEntry);
             return cacheEntry;
         }
-        return new CacheEntry(contributors!);
+        return new CacheEntry(contributors!, DateTime.Now);
     }
 
     private static void CleanupCache(){
