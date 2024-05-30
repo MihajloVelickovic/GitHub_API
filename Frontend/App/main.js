@@ -52,7 +52,7 @@ button.onclick = async () => {
                       then((data) =>{
                         response = new Response(data.Key, data.Contributors, data.TotalCommits, data.TotalTime);
                         response.drawResponse(document.querySelector(".responses"));
-                    }).catch((error) => {
+                    });/*.catch((error) => {
                         alert("API error");
-                    });
+                    });*/
 }
