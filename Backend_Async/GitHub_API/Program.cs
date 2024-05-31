@@ -44,6 +44,7 @@ public class Program{
 
         if (CacheSettings.DoPeriodicCleanup){
             var cleanupThread = new Thread(PeriodicCleanup);
+            cleanupThread.IsBackground = true;
             cleanupThread.Start();
         }
        
@@ -100,8 +101,8 @@ public class Program{
             var key = $"{owner[1]}/{repo[1]}";
             
             var result = CacheSettings.CachingEnabled 
-                         ? await FetchContributorsWithCaching(key)
-                         : await FetchContributorsWithoutCaching(key);
+                       ? await FetchContributorsWithCaching(key)
+                       : await FetchContributorsWithoutCaching(key);
             
             stopwatch.Stop();
                 
@@ -134,9 +135,11 @@ public class Program{
         }
         catch(JsonException){
             Console.WriteLine("API error: Returned empty json");
+            await SendErrorResponse(response, "API error: Returned empty JSON", HttpStatusCode.BadRequest);
         }
         catch (Exception e){
             Console.WriteLine(e.Message);
+            await SendErrorResponse(response, e.Message, HttpStatusCode.InternalServerError);
         }
     }
 
@@ -163,6 +166,21 @@ public class Program{
             return cacheEntry;
         }
         return new CacheEntry(contributors!, DateTime.Now);
+    }
+
+    private static async Task SendErrorResponse(HttpListenerResponse response, string message, HttpStatusCode statusCode)
+    {
+        var errorResponse = new
+        {
+            StatusCode = (int)statusCode,
+            Message = message
+        };
+        var responseJson = JsonConvert.SerializeObject(errorResponse);
+        var responseByteArray = Encoding.UTF8.GetBytes(responseJson);
+        response.ContentLength64 = responseByteArray.Length;
+        response.ContentType = "application/json";
+        response.StatusCode = (int)statusCode;
+        await response.OutputStream.WriteAsync(responseByteArray);
     }
 
     private static void CleanupCache(){

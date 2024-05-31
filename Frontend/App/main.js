@@ -1,4 +1,5 @@
 import {Response} from "./Models/response.js"
+import { ErrorResponse } from "./Models/errorResponse.js";
 
 let scheme = localStorage.getItem("scheme");
 
@@ -48,11 +49,21 @@ button.onclick = async () => {
     let response;
 
     const res = await fetch(`http://localhost:1738/?owner=${owner}&repo=${repo}`).
-                      then(res => res.json()).
-                      then((data) =>{
-                        response = new Response(data.Key, data.Contributors, data.TotalCommits, data.TotalTime);
-                        response.drawResponse(document.querySelector(".responses"));
-                    });/*.catch((error) => {
-                        alert("API error");
-                    });*/
+                                    then(res => {
+                                        if (!res.ok) {
+                                            return res.json().then(errorData => {
+                                                throw new Error(`Error: ${errorData.Message}`);
+                                            });
+                                        }
+                                        return res.json();
+                                    })
+                                    .then(data => {
+                                        const response = new Response(data.Key, data.Contributors, data.TotalCommits, data.TotalTime);
+                                        response.drawResponse(document.querySelector(".responses"));
+                                    })
+                                    .catch(err => {
+                                        console.log(err);
+                                        const errorResponse = new ErrorResponse(err.message);
+                                        errorResponse.drawResponse(document.querySelector(".responses"));
+                                    });
 }
