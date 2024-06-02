@@ -39,7 +39,6 @@ public class Program{
             Console.Write($"Error starting listener: {e.Message}");
         }
        
-
         Console.WriteLine("Waiting for requests ....");
 
         if (CacheSettings.DoPeriodicCleanup){
@@ -170,17 +169,28 @@ public class Program{
 
     private static async Task SendErrorResponse(HttpListenerResponse response, string message, HttpStatusCode statusCode)
     {
-        var errorResponse = new
-        {
-            StatusCode = (int)statusCode,
-            Message = message
-        };
-        var responseJson = JsonConvert.SerializeObject(errorResponse);
-        var responseByteArray = Encoding.UTF8.GetBytes(responseJson);
-        response.ContentLength64 = responseByteArray.Length;
-        response.ContentType = "application/json";
-        response.StatusCode = (int)statusCode;
-        await response.OutputStream.WriteAsync(responseByteArray);
+        try{
+            if (message == null)
+                throw new ArgumentNullException("The message was null");
+
+            var errorResponse = new
+            {
+                StatusCode = (int)statusCode,
+                Message = message
+            };
+            var responseJson = JsonConvert.SerializeObject(errorResponse);
+            var responseByteArray = Encoding.UTF8.GetBytes(responseJson);
+            response.ContentLength64 = responseByteArray.Length;
+            response.ContentType = "application/json";
+            response.StatusCode = (int)statusCode;
+            await response.OutputStream.WriteAsync(responseByteArray);
+        }
+        catch(ArgumentNullException e){
+            Console.WriteLine($"Null argument exception: {e.Message}");
+        }
+        catch(Exception e){
+            Console.WriteLine($"Error sending error response: {e.Message}");
+        }
     }
 
     private static void CleanupCache(){
